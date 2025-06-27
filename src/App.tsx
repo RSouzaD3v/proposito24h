@@ -35,11 +35,12 @@ import WriterReadingPlans from "./pages/writer/ReadingPlans";
 import WriterQuizzes from "./pages/writer/Quizzes";
 import WriterAnalytics from "./pages/writer/Analytics";
 import WriterDevotionalPreview from "./pages/writer/DevotionalPreview";
-import WriterQuizEditor from "./pages/writer/QuizEditor";
+import WriterQuizCreate from "./pages/writer/QuizCreate";
 import WriterReadingPlanCreate from "./pages/writer/ReadingPlanCreate";
 import WriterReadingPlanEdit from "./pages/writer/ReadingPlanEdit";
 import WriterDevotionalEdit from "./pages/writer/DevotionalEdit";
 import WriterDevotionalCreate from "./pages/writer/DevotionalCreate";
+import WriterQuizEdit from "./pages/writer/QuizEdit";
 
 const queryClient = new QueryClient();
 
@@ -236,7 +237,7 @@ const App = () => (
               path="/writer/quizzes/new" 
               element={
                 <ProtectedRoute requiredRole="WRITER">
-                  <WriterQuizEditor />
+                  <WriterQuizCreate />
                 </ProtectedRoute>
               } 
             />
@@ -244,7 +245,7 @@ const App = () => (
               path="/writer/quizzes/:id/edit" 
               element={
                 <ProtectedRoute requiredRole="WRITER">
-                  <WriterQuizEditor />
+                  <WriterQuizEdit />
                 </ProtectedRoute>
               } 
             />
