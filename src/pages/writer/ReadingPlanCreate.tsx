@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,20 +9,50 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Save, Eye, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const WriterReadingPlanEditor = () => {
+const WriterReadingPlanCreate = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("");
   const [days, setDays] = useState([
-    { id: 1, day: 1, title: "", devotionalId: "" }
+    { id: 1, day: 1, title: "", bookId: "" }
   ]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [books, setBooks] = useState([]);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      setLoading(true);
+
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/devocional/books`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Erro ao buscar livros");
+        }
+        const data = await response.json();
+
+        console.log("Livros recebidos:", data);
+        setBooks(data);
+      } catch (error) {
+        console.error("Erro ao buscar livros:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooks();
+  }, []);
 
   const addDay = () => {
     const newDay = {
       id: days.length + 1,
       day: days.length + 1,
       title: "",
-      devotionalId: ""
+      bookId: ""
     };
     setDays([...days, newDay]);
   };
@@ -37,6 +67,33 @@ const WriterReadingPlanEditor = () => {
     ));
   };
 
+  const createPlan = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/read-plan/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          duration,
+          days: days
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao criar plano de leitura');
+      }
+
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -47,7 +104,7 @@ const WriterReadingPlanEditor = () => {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Editor de Plano de Leitura</h1>
+            <h1 className="text-3xl font-bold">Criador de Plano de Leitura</h1>
             <p className="text-muted-foreground">
               Crie ou edite seu plano de leitura
             </p>
@@ -58,7 +115,7 @@ const WriterReadingPlanEditor = () => {
             <Eye className="mr-2 h-4 w-4" />
             Visualizar
           </Button>
-          <Button>
+          <Button onClick={createPlan}>
             <Save className="mr-2 h-4 w-4" />
             Salvar
           </Button>
@@ -149,16 +206,16 @@ const WriterReadingPlanEditor = () => {
                 <div className="space-y-2">
                   <Label>Devocional</Label>
                   <Select 
-                    value={day.devotionalId} 
-                    onValueChange={(value) => updateDay(day.id, 'devotionalId', value)}
+                    value={day.bookId} 
+                    onValueChange={(value) => updateDay(day.id, 'bookId', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um devocional" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">A Graça de Deus</SelectItem>
-                      <SelectItem value="2">Fé em Tempos Difíceis</SelectItem>
-                      <SelectItem value="3">O Amor de Cristo</SelectItem>
+                      {books.map((v) => (
+                        <SelectItem value={v.id}>{v.title}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -171,4 +228,4 @@ const WriterReadingPlanEditor = () => {
   );
 };
 
-export default WriterReadingPlanEditor;
+export default WriterReadingPlanCreate;

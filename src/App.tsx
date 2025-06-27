@@ -36,7 +36,8 @@ import WriterQuizzes from "./pages/writer/Quizzes";
 import WriterAnalytics from "./pages/writer/Analytics";
 import WriterDevotionalPreview from "./pages/writer/DevotionalPreview";
 import WriterQuizEditor from "./pages/writer/QuizEditor";
-import WriterReadingPlanEditor from "./pages/writer/ReadingPlanEditor";
+import WriterReadingPlanCreate from "./pages/writer/ReadingPlanCreate";
+import WriterReadingPlanEdit from "./pages/writer/ReadingPlanEdit";
 import WriterDevotionalEdit from "./pages/writer/DevotionalEdit";
 import WriterDevotionalCreate from "./pages/writer/DevotionalCreate";
 
@@ -211,7 +212,7 @@ const App = () => (
               path="/writer/reading-plans/new" 
               element={
                 <ProtectedRoute requiredRole="WRITER">
-                  <WriterReadingPlanEditor />
+                  <WriterReadingPlanCreate />
                 </ProtectedRoute>
               } 
             />
@@ -219,7 +220,7 @@ const App = () => (
               path="/writer/reading-plans/:id/edit" 
               element={
                 <ProtectedRoute requiredRole="WRITER">
-                  <WriterReadingPlanEditor />
+                  <WriterReadingPlanEdit />
                 </ProtectedRoute>
               } 
             />

@@ -192,7 +192,7 @@ const WriterDevotionals = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total de Livros</p>
-                {/* <p className="text-2xl font-bold">{writerBooks.length}</p> */}
+                <p className="text-2xl font-bold">{books?.length}</p>
               </div>
               <BookOpen className="h-8 w-8 text-primary" />
             </div>
@@ -203,7 +203,7 @@ const WriterDevotionals = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Publicados</p>
-                {/* <p className="text-2xl font-bold">{publishedBooks}</p> */}
+                <p className="text-2xl font-bold">{books.filter((v) => v.mode === 'PUBLISHED').length}</p>
               </div>
               <Eye className="h-8 w-8 text-green-500" />
             </div>
