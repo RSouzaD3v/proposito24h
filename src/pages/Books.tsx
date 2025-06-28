@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,69 +10,8 @@ import {
   X,
   BookOpen,
   Clock,
-  DollarSign,
-  Star
+  DollarSign
 } from "lucide-react";
-
-// Mock books data baseado no schema
-const mockBooks = [
-  {
-    id: "1",
-    title: "Encontrando Paz nas Tempestades da Vida",
-    description: "Um livro devocional que ajuda a encontrar tranquilidade mesmo em momentos difíceis.",
-    verseGuide: "Salmos 23:4",
-    coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=600&fit=crop",
-    authorName: "Pastor João Silva",
-    bookPrice: 29.90,
-    category: "Paz Interior",
-    tags: ["paz", "superação", "fé"],
-    readingTime: 21,
-    difficultyLevel: "EASY",
-    mode: "PUBLISHED"
-  },
-  {
-    id: "2",
-    title: "Renovando sua Fé Diariamente",
-    description: "Exercícios práticos para fortalecer sua fé no dia a dia através de devocionais poderosos.",
-    verseGuide: "Romanos 10:17",
-    coverImage: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop",
-    authorName: "Dra. Maria Oliveira",
-    bookPrice: 34.50,
-    category: "Fé e Esperança",
-    tags: ["fé", "esperança", "crescimento"],
-    readingTime: 30,
-    difficultyLevel: "MEDIUM",
-    mode: "PUBLISHED"
-  },
-  {
-    id: "3",
-    title: "O Poder da Gratidão",
-    description: "Como a gratidão pode transformar sua perspectiva e aproximá-lo de Deus.",
-    verseGuide: "1 Tessalonicenses 5:18",
-    coverImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop",
-    authorName: "Pr. Roberto Mendes",
-    bookPrice: 27.90,
-    category: "Crescimento Espiritual",
-    tags: ["gratidão", "transformação", "espiritualidade"],
-    readingTime: 14,
-    difficultyLevel: "EASY",
-    mode: "PUBLISHED"
-  },
-  {
-    id: "4",
-    title: "Vencendo o Medo com a Fé",
-    description: "Estratégias bíblicas para superar o medo e a ansiedade usando princípios da Palavra.",
-    verseGuide: "Josué 1:9",
-    coverImage: "https://images.unsplash.com/photo-1526243741027-444d633d7365?w=400&h=600&fit=crop",
-    authorName: "Marcos Paulo",
-    bookPrice: 39.90,
-    category: "Superação",
-    tags: ["medo", "ansiedade", "coragem", "fé"],
-    readingTime: 28,
-    difficultyLevel: "MEDIUM",
-    mode: "PUBLISHED"
-  }
-];
 
 const categories = [
   "Todos",
@@ -85,23 +24,60 @@ const categories = [
 ];
 
 const Books = () => {
+  const [books, setBooks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [priceRange, setPriceRange] = useState("all");
 
-  const filteredBooks = mockBooks.filter((book) => {
-    const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         book.authorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         book.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesCategory = selectedCategory === "Todos" || book.category === selectedCategory;
-    
-    const matchesPrice = priceRange === "all" || 
-                        (priceRange === "low" && book.bookPrice <= 30) ||
-                        (priceRange === "medium" && book.bookPrice > 30 && book.bookPrice <= 50) ||
-                        (priceRange === "high" && book.bookPrice > 50);
-    
+  useEffect(() => {
+    const fetchBooks = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/devocional/books/available`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Erro ao buscar livros");
+        }
+
+        const data = await res.json();
+        setBooks(data);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || "Erro desconhecido");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooks();
+  }, []);
+
+  const filteredBooks = books.filter((book) => {
+    const matchesSearch =
+      book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      book.authorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      book.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesCategory =
+      selectedCategory === "Todos" || book.category === selectedCategory;
+
+    const matchesPrice =
+      priceRange === "all" ||
+      (priceRange === "low" && book.bookPrice <= 30) ||
+      (priceRange === "medium" && book.bookPrice > 30 && book.bookPrice <= 50) ||
+      (priceRange === "high" && book.bookPrice > 50);
+
     return matchesSearch && matchesCategory && matchesPrice;
   });
 
@@ -219,6 +195,38 @@ const Books = () => {
         </div>
       )}
 
+      {loading && (
+        <div className="text-center py-12 text-muted-foreground">
+          Carregando livros disponíveis...
+        </div>
+      )}
+
+      {error && (
+        <div className="text-center py-12 text-red-500">
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && filteredBooks.length === 0 && (
+        <div className="text-center py-12">
+          <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-medium">Nenhum livro encontrado</h3>
+          <p className="mt-2 text-muted-foreground">
+            Tente ajustar seus filtros ou termos de busca
+          </p>
+          <Button
+            className="mt-4"
+            onClick={() => {
+              setSearchTerm("");
+              setSelectedCategory("Todos");
+              setPriceRange("all");
+            }}
+          >
+            Limpar filtros
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredBooks.map((book) => (
           <Card key={book.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
@@ -272,7 +280,7 @@ const Books = () => {
                 <div className="flex items-center gap-1">
                   <DollarSign className="h-4 w-4 text-green-600" />
                   <span className="text-lg font-bold text-green-600">
-                    R$ {book.bookPrice.toFixed(2)}
+                    R$ {book.bookPrice?.toFixed(2)}
                   </span>
                 </div>
                 <Button size="sm">
@@ -283,26 +291,6 @@ const Books = () => {
           </Card>
         ))}
       </div>
-
-      {filteredBooks.length === 0 && (
-        <div className="text-center py-12">
-          <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">Nenhum livro encontrado</h3>
-          <p className="mt-2 text-muted-foreground">
-            Tente ajustar seus filtros ou termos de busca
-          </p>
-          <Button
-            className="mt-4"
-            onClick={() => {
-              setSearchTerm("");
-              setSelectedCategory("Todos");
-              setPriceRange("all");
-            }}
-          >
-            Limpar filtros
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
