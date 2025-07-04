@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserRole, UserStatus } from "@/contexts/AuthContext";
+import { ModalCreateWriter } from "./_components/ModalCreateWriter";
 
 // Mock users data - removendo admin
 const mockUsers = [
@@ -47,7 +48,6 @@ const mockUsers = [
     lastAccess: new Date().toISOString(),
     createdAt: "2024-01-01T00:00:00Z",
     books: 5,
-    followers: 120
   },
   {
     id: "3",
@@ -70,7 +70,6 @@ const mockUsers = [
     lastAccess: new Date().toISOString(),
     createdAt: "2024-01-15T00:00:00Z",
     books: 3,
-    followers: 85
   },
   {
     id: "5",
@@ -97,11 +96,38 @@ const mockUsers = [
 ];
 
 const UsersManagement = () => {
+  const [writers, setWriters] = useState(mockUsers);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const filteredUsers = mockUsers.filter((user) => {
+  const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchWriters = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/writers`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        const data = await res.json();
+        
+        if(!res.ok) {
+          setWriters(mockUsers);
+        }
+        
+        setWriters(data.writers || mockUsers);
+
+        console.log(res);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+
+    fetchWriters();
+  }, []);
+
+  const filteredUsers = writers?.filter((user) => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = filterRole === "all" || user.role === filterRole;
@@ -144,16 +170,22 @@ const UsersManagement = () => {
     }
   };
 
+  const onClose = () => {
+    setIsOpenModal(false);
+  }
+
   return (
     <div className="space-y-6">
+      {isOpenModal && <ModalCreateWriter onClose={onClose} />}
+
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold md:text-3xl">Gestão de Usuários</h1>
+          <h1 className="text-2xl font-bold md:text-3xl">Gestão de Usuários Escritores</h1>
           <p className="text-muted-foreground mt-1">
-            Gerencie leitores e escritores da plataforma
+            Gerencie escritores da plataforma
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsOpenModal(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Adicionar Usuário
         </Button>
@@ -221,7 +253,7 @@ const UsersManagement = () => {
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                       {user.role === "WRITER" && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          {user.books} livros • {user.followers} seguidores
+                          {user.books} livros •  seguidores
                         </p>
                       )}
                       {user.role === "READER" && (
